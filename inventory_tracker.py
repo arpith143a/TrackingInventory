@@ -21,6 +21,12 @@ class InventoryTracker(object):
         self.session.query(Item).filter_by(id=item_id).delete()
         self.session.commit()
 
+    def search(self, query, prefix=""):
+        query = "%"+query+"%"
+        items = self.session.query(Item).filter(Item.name.like(query)).all()
+        for item in items:
+            print(prefix+str(item.id), item.name, item.serial_number, item.value)
+
     def write_csv(self, path="./out.csv"):
         items = self.session.query(Item).all()
         with open(path, "w") as f:
@@ -30,10 +36,10 @@ class InventoryTracker(object):
                                            item.value)
                 f.write(line)
 
-    def print(self):
+    def print(self, prefix=""):
         items = self.session.query(Item).all()
         for item in items:
-            print(item.id, item.name, item.serial_number, item.value)
+            print(prefix+str(item.id), item.name, item.serial_number, item.value)
 
 if __name__ == '__main__':
     inventoryTracker = InventoryTracker()
@@ -41,32 +47,38 @@ if __name__ == '__main__':
     while(1):
         print("************************************************************")
         print("Select one of the following:")
-        ip = input("1. Add item\n2. Remove item\n3. Generate CSV\n4. Print\n5. Exit\n")
+        ip = input("\t1. Add item\n\t2. Remove item\n\t3. Generate CSV\n\t4. Print\n\t5. Search\n\t6. Exit\n")
 
         if ip == '1':
-            print("> Add item:")
-            name = input(">> name:")
-            serial_number = input(">> serial number:")
-            value = int(input(">> value:"))
+            print("***Adding item***")
+            name = input("\t>> name:")
+            serial_number = input("\t>> serial number:")
+            value = int(input("\t>> value:"))
 
             inventoryTracker.add_item(name, serial_number, value)
 
-            print("> Added item!")
+            print("***Added item!***")
 
         elif ip == '2':
-            print("> Remove item:")
-            print("> All Items:")
+            print("***Removing item***")
+            print("\t> All Items:")
             inventoryTracker.print()
-            item_id = input(">> Item id:")
+            item_id = input("\t>> Item id:")
             inventoryTracker.remove_item(item_id)
 
             print("> Removed item!")
         elif ip == '3':
             inventoryTracker.write_csv()
         elif ip == '4':
-            inventoryTracker.print()
+            print("***All items***")
+            inventoryTracker.print("\t\t")
         elif ip == '5':
+            print("***Searching inventory***")
+            query = input("\t> Search query: ")
+            print("\t> Search results:")
+            inventoryTracker.search(query, "\t\t")
+        elif ip == '6':
             print("Bye!")
             break
         else:
-            print("> Invalid option.")
+            print("***Invalid option***")
