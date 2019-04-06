@@ -2,6 +2,9 @@ from models import Item, Base, DATABASE_URI
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
+import locale
+locale.setlocale(locale.LC_ALL, '')
+
 class InventoryTracker(object):
     def __init__(self):
         super(InventoryTracker, self).__init__()
@@ -32,14 +35,15 @@ class InventoryTracker(object):
         with open(path, "w") as f:
             f.write("id, name, serial_number, value\n")
             for item in items:
+                cents = int(item.value % 100)
                 line = "%d, %s, %s, %s\n" % (item.id, item.name, item.serial_number,
-                                           item.value)
+                                           locale.currency(item.value / 100))
                 f.write(line)
 
     def print(self, prefix=""):
         items = self.session.query(Item).all()
         for item in items:
-            print(prefix+str(item.id), item.name, item.serial_number, item.value)
+            print(prefix+str(item.id), item.name, item.serial_number, item.value, sep='\t')
 
 if __name__ == '__main__':
     inventoryTracker = InventoryTracker()
@@ -53,7 +57,7 @@ if __name__ == '__main__':
             print("***Adding item***")
             name = input("\t>> name:")
             serial_number = input("\t>> serial number:")
-            value = int(input("\t>> value:"))
+            value = int(input("\t>> value (in cents):"))
 
             inventoryTracker.add_item(name, serial_number, value)
 
